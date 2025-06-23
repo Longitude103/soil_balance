@@ -1,6 +1,10 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+mod boundary_cond;
+mod daily_inputs;
+mod hydrus;
+mod root_uptake;
+mod soil_hydra;
+
+pub use hydrus::Hydrus1D;
 
 #[cfg(test)]
 mod tests {
@@ -8,7 +12,8 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+        let mut model = Hydrus1D::new();
+        model.apply_bc();
+        model.run();
     }
 }
