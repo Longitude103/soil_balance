@@ -1,0 +1,80 @@
+# Soil hydraulic parameters for van Genuchten-Mualem model
+# Units: theta_r, theta_s (cm³/cm³), alpha (1/cm), n (-), ks (cm/day)
+# Source: Carsel and Parrish (1988), HYDRUS-1D database
+
+[sand]
+theta_r = 0.045
+theta_s = 0.43
+alpha = 0.145
+n = 2.68
+ks = 712.8
+
+[loamy_sand]
+theta_r = 0.057
+theta_s = 0.41
+alpha = 0.124
+n = 2.28
+ks = 350.2
+
+[sandy_loam]
+theta_r = 0.065
+theta_s = 0.41
+alpha = 0.075
+n = 1.89
+ks = 106.1
+
+[loam]
+theta_r = 0.078
+theta_s = 0.43
+alpha = 0.036
+n = 1.56
+ks = 24.96
+
+[silt]
+theta_r = 0.034
+theta_s = 0.46
+alpha = 0.016
+n = 1.37
+ks = 6.0
+
+[silt_loam]
+theta_r = 0.067
+theta_s = 0.45
+alpha = 0.020
+n = 1.41
+ks = 10.8
+
+[sandy_clay_loam]
+theta_r = 0.100
+theta_s = 0.39
+alpha = 0.059
+n = 1.48
+ks = 31.44
+
+[clay_loam]
+theta_r = 0.095
+theta_s = 0.41
+alpha = 0.019
+n = 1.31
+ks = 6.24
+
+[silty_clay_loam]
+theta_r = 0.089
+theta_s = 0.43
+alpha = 0.010
+n = 1.23
+ks = 1.68
+
+[sandy_clay]
+theta_r = 0.100
+theta_s = 0.38
+alpha = 0.027
+n = 1.23
+ks = 2.88
+
+[clay]
+theta_r = 0.068
+theta_s = 0.38
+alpha = 0.008
+n = 1.09
+ks = 4.8

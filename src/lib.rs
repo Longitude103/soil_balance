@@ -12,7 +12,7 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let mut model = Hydrus1D::new();
+        let mut model = Hydrus1D::default();
         model.apply_bc();
         model.run();
     }

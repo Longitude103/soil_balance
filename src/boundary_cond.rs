@@ -3,9 +3,9 @@ use crate::daily_inputs::DailyInputs;
 // Boundary condition parameters
 #[derive(Clone)]
 pub struct BoundaryParams {
-    pub h_crit: f64, // Critical pressure head for evaporation [cm]
+    pub h_crit: f64, // Critical pressure head for evaporation [cm], default -15000.0 cm
     // h_top: f64,  // Fallback top pressure head [cm]
-    pub h_bot: f64, // Bottom pressure head [cm]
+    pub h_bot: f64, // Bottom pressure head [cm], default -100.0 cm
 }
 
 impl BoundaryParams {
@@ -13,7 +13,7 @@ impl BoundaryParams {
         BoundaryParams {
             h_crit: -15000.0, // Critical pressure head for evaporation
             // h_top: -10.0,     // Fallback top pressure head
-            h_bot: -100.0, // Constant bottom pressure head
+            h_bot: 0.0,       // Groundwater at z = 150 cm (saturated)
         }
     }
 
