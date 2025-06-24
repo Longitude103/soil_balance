@@ -84,16 +84,16 @@ impl SoilParams {
 
 // Soil layer definition
 #[derive(Clone)]
-struct SoilLayer {
-    z_min: f64,      // Start depth of layer [cm]
-    z_max: f64,      // End depth of layer [cm]
+pub struct SoilLayer {
+    pub(crate) z_min: f64,      // Start depth of layer [cm]
+    pub(crate) z_max: f64,      // End depth of layer [cm]
     params: SoilParams, // Soil parameters
 }
 
 // Soil profile managing multiple layers
 #[derive(Clone)]
 pub(crate) struct SoilProfile {
-    layers: Vec<SoilLayer>,
+    pub(crate) layers: Vec<SoilLayer>,
 }
 
 impl SoilProfile {

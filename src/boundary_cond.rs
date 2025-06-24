@@ -1,24 +1,33 @@
 use crate::daily_inputs::DailyInputs;
 
+
+// Bottom boundary condition types
+#[derive(Clone)]
+pub(crate) enum BottomBoundary {
+    Groundwater(f64), // Dirichlet: fixed pressure head (cm)
+    FreeDrainage,     // Neumann: q = -K(h), dh/dz = 0
+}
+
 // Boundary condition parameters
 #[derive(Clone)]
 pub struct BoundaryParams {
-    pub h_crit: f64, // Critical pressure head for evaporation [cm], default -15000.0 cm
-    // h_top: f64,  // Fallback top pressure head [cm]
-    pub h_bot: f64, // Bottom pressure head [cm], default -100.0 cm
+    pub(crate) h_crit: f64,          // Critical pressure head for evaporation [cm]
+    h_top: f64,           // Fallback top pressure head [cm]
+    pub(crate) bottom_boundary: BottomBoundary, // Bottom boundary condition
 }
 
 impl BoundaryParams {
     pub fn new() -> Self {
         BoundaryParams {
             h_crit: -15000.0, // Critical pressure head for evaporation
-            // h_top: -10.0,     // Fallback top pressure head
-            h_bot: 0.0,       // Groundwater at z = 150 cm (saturated)
+            h_top: -10.0,     // Fallback top pressure head
+            bottom_boundary: BottomBoundary::FreeDrainage, // Default to free drainage
+            // For groundwater, use: BottomBoundary::Groundwater(0.0)
         }
     }
 
     // Top boundary flux [cm/day] (positive = rainfall + irrigation, negative = evaporation)
-    pub fn top_flux(&self, time: f64, h_top: f64, inputs: &DailyInputs) -> (f64, bool) {
+    pub(crate) fn top_flux(&self, time: f64, h_top: f64, inputs: &DailyInputs) -> (f64, bool) {
         let rainfall = inputs.get_daily_value(time, &inputs.rainfall);
         let irrigation = inputs.get_daily_value(time, &inputs.irrigation);
         let total_influx = rainfall + irrigation;

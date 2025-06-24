@@ -6,3 +6,5 @@ edition = "2024"
 [dependencies]
 nalgebra = "0.33.2"
 toml = "0.8.23"
+serde = { version = "1.0.219", features = ["derive"] }
+approx = "0.5.1"
