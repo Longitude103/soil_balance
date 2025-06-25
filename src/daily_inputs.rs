@@ -12,32 +12,41 @@ impl DailyInputs {
     pub fn new() -> Self {
         // Example: 2 days of data
         DailyInputs {
-            rainfall: vec![0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 0.0],      // 2 cm/day on day 0, 0 cm/day on day 1
-            irrigation: vec![3.0, 3.0, 2.0, 1.0, 0.5, 3.0, 3.0, 3.0, 3.0, 3.0],    // 1 cm/day on day 0, 0 cm/day on day 1
-            evaporation: vec![0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3, 0.5],   // 0.3 cm/day on day 0, 0.5 cm/day on day 1
-            transpiration: vec![0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.4], // 0.5 cm/day on day 0, 0.4 cm/day on day 1
-            root_dist: vec![
-                // Day 0: No Roots (70% in top 10 cm)
-                vec![(0.0, 0.00), (10.0, 0.00), (20.0, 0.00), (30.0, 0.0)],
-                // Day 1: No Roots (70% in top 10 cm)
-                vec![(0.0, 0.00), (10.0, 0.00), (20.0, 0.00), (30.0, 0.0)],
-                // Day 2: No Roots (70% in top 10 cm)
-                vec![(0.0, 0.00), (10.0, 0.00), (20.0, 0.00), (30.0, 0.0)],
-                // Day 3: No Roots (70% in top 10 cm)
-                vec![(0.0, 0.00), (10.0, 0.00), (20.0, 0.00), (30.0, 0.0)],
-                // Day 4: No Roots (70% in top 10 cm)
-                vec![(0.0, 0.00), (10.0, 0.00), (20.0, 0.00), (30.0, 0.0)],
-                // Day 5: No Roots (70% in top 10 cm)
-                vec![(0.0, 0.00), (10.0, 0.00), (20.0, 0.00), (30.0, 0.0)],
-                // Day 6: No Roots (70% in top 10 cm)
-                vec![(0.0, 0.00), (10.0, 0.00), (20.0, 0.00), (30.0, 0.0)],
-                // Day 7: No Roots (70% in top 10 cm)
-                vec![(0.0, 0.00), (10.0, 0.00), (20.0, 0.00), (30.0, 0.0)],
-                // Day 8: Surface-heavy distribution (70% in top 10 cm)
-                vec![(0.0, 0.07), (10.0, 0.02), (20.0, 0.01), (30.0, 0.0)],
-                // Day 9: More uniform distribution
-                vec![(0.0, 0.04), (10.0, 0.03), (20.0, 0.02), (30.0, 0.0)],
-            ],
+            // create a vector with 30 values of 1
+            rainfall: vec![1.0; 30], // cm/day
+            irrigation: vec![0.0; 30], // cm/day
+            evaporation: vec![0.3; 30], // cm/day
+            transpiration: vec![0.0; 30], // cm/day
+
+            // (cm to depth, % root density) tuples for each day
+            root_dist: vec![vec![(10.0, 0.00), (20.0, 0.000), (30.0, 0.0)]; 30],
+
+            // rainfall: vec![0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 0.0],      // 2 cm/day on day 0, 0 cm/day on day 1
+            // irrigation: vec![0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],    // 1 cm/day on day 0, 0 cm/day on day 1
+            // evaporation: vec![0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3, 0.5],   // 0.3 cm/day on day 0, 0.5 cm/day on day 1
+            // transpiration: vec![0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.5, 0.4], // 0.5 cm/day on day 0, 0.4 cm/day on day 1
+            // root_dist: vec![
+            //     // Day 0: No Roots (70% in top 10 cm)
+            //     vec![(0.0, 0.00), (10.0, 0.00), (20.0, 0.00), (30.0, 0.0)],
+            //     // Day 1: No Roots (70% in top 10 cm)
+            //     vec![(0.0, 0.00), (10.0, 0.00), (20.0, 0.00), (30.0, 0.0)],
+            //     // Day 2: No Roots (70% in top 10 cm)
+            //     vec![(0.0, 0.00), (10.0, 0.00), (20.0, 0.00), (30.0, 0.0)],
+            //     // Day 3: No Roots (70% in top 10 cm)
+            //     vec![(0.0, 0.00), (10.0, 0.00), (20.0, 0.00), (30.0, 0.0)],
+            //     // Day 4: No Roots (70% in top 10 cm)
+            //     vec![(0.0, 0.00), (10.0, 0.00), (20.0, 0.00), (30.0, 0.0)],
+            //     // Day 5: No Roots (70% in top 10 cm)
+            //     vec![(0.0, 0.00), (10.0, 0.00), (20.0, 0.00), (30.0, 0.0)],
+            //     // Day 6: No Roots (70% in top 10 cm)
+            //     vec![(0.0, 0.00), (10.0, 0.00), (20.0, 0.00), (30.0, 0.0)],
+            //     // Day 7: No Roots (70% in top 10 cm)
+            //     vec![(0.0, 0.00), (10.0, 0.00), (20.0, 0.00), (30.0, 0.0)],
+            //     // Day 8: Surface-heavy distribution (70% in top 10 cm)
+            //     vec![(0.0, 0.07), (10.0, 0.02), (20.0, 0.01), (30.0, 0.0)],
+            //     // Day 9: More uniform distribution
+            //     vec![(0.0, 0.04), (10.0, 0.03), (20.0, 0.02), (30.0, 0.0)],
+            // ],
         }
     }
 

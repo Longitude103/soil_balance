@@ -30,16 +30,14 @@ impl BoundaryParams {
     pub(crate) fn top_flux(&self, time: f64, h_top: f64, inputs: &DailyInputs) -> (f64, bool) {
         let rainfall = inputs.get_daily_value(time, &inputs.rainfall);
         let irrigation = inputs.get_daily_value(time, &inputs.irrigation);
-        let total_influx = rainfall + irrigation;
+        let evap = inputs.get_daily_value(time, &inputs.evaporation);
+        let total_influx = rainfall + irrigation - evap;
         if total_influx > 0.0 {
             (total_influx, true) // Rainfall and/or irrigation as flux
+        } else if h_top > self.h_crit {
+            (-evap, true) // Evaporation as flux
         } else {
-            let evap = inputs.get_daily_value(time, &inputs.evaporation);
-            if h_top > self.h_crit {
-                (-evap, true) // Evaporation as flux
-            } else {
-                (0.0, false) // Switch to Dirichlet (h = h_crit)
-            }
+            (0.0, false) // Switch to Dirichlet (h = h_crit)
         }
     }
 }

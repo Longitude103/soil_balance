@@ -6,20 +6,20 @@ use nalgebra::{DMatrix, DVector};
 
 // Simulation parameters
 struct SimParams {
-    dz: f64,    // Spatial step [cm]
-    dt: f64,    // Time step [day]
-    z_max: f64, // Soil column depth [cm]
-    t_max: f64, // Simulation time [day]
-    root_zone_depth: f64, // Root zone depth [cm]
+    dz: f64,              // Spatial step [cm]
+    dt: f64,              // Time step [day]
+    z_max: f64,           // Soil column depth [cm]
+    t_max: f64,           // Simulation time [day]
+    root_zone_depth: f64, // Root zone depth [cm],
 }
 
 impl SimParams {
     fn new() -> Self {
         SimParams {
-            dz: 10.0,      // 1 cm spatial resolution
-            dt: 0.1,    // 0.001 day time step
-            z_max: 150.0,  // 150 cm soil column to include groundwater
-            t_max: 30.0,   // 1 day simulation
+            dz: 10.0,              // 1 cm spatial resolution
+            dt: 0.001,             // 0.001 day time step
+            z_max: 150.0,          // 150 cm soil column to include groundwater
+            t_max: 30.0,           // 1 day simulation
             root_zone_depth: 30.0, // 30 cm root zone depth
         }
     }
@@ -49,14 +49,18 @@ impl Hydrus1D {
         // Initialize pressure head based on bottom boundary
         let h = DVector::from_fn(nz, |i, _| {
             let z = i as f64 * sim.dz;
-            if z <= 60.0 { -33.0 } else { -15.0 }
+            if z <= 60.0 { -100.0 } else { -100.0 }
         });
 
+        // // Define soil layers: loam (0–60 cm), loamy-sand (60–80 cm), sand (80–150 cm)
+        // let soil_layers = vec![
+        //     (0.0, 60.0, "loam"),
+        //     (60.0, 80.0, "loamy-sand"),
+        //     (80.0, 150.0, "sand"),
+        // ];        
         // Define soil layers: loam (0–60 cm), loamy-sand (60–80 cm), sand (80–150 cm)
         let soil_layers = vec![
-            (0.0, 60.0, "loam"),
-            (60.0, 80.0, "loamy-sand"),
-            (80.0, 150.0, "sand"),
+            (0.0, 150.0, "loam"),
         ];
         let soil_profile = SoilProfile::new(soil_layers);
 
@@ -142,7 +146,9 @@ impl Hydrus1D {
         let rainfall = self.inputs.get_daily_value(time, &self.inputs.rainfall);
         let irrigation = self.inputs.get_daily_value(time, &self.inputs.irrigation);
         let evap = self.inputs.get_daily_value(time, &self.inputs.evaporation);
-        let tp = self.inputs.get_daily_value(time, &self.inputs.transpiration);
+        let tp = self
+            .inputs
+            .get_daily_value(time, &self.inputs.transpiration);
 
         // Top boundary condition (flux or Dirichlet)
         let (top_flux, is_flux) = self.bc.top_flux(time, h_old[0], &self.inputs);
@@ -158,6 +164,7 @@ impl Hydrus1D {
                     a[(i, i)] = -k_ip / dz;
                     a[(i, i + 1)] = k_ip / dz;
                     b[i] = k_ip - top_flux;
+                    // b[i] = k_ip + top_flux;
                 } else {
                     // Dirichlet BC: h = h_crit
                     a[(i, i)] = 1.0;
@@ -214,28 +221,42 @@ impl Hydrus1D {
         let bottom_flux = self.compute_flux(self.sim.z_max);
         let root_zone_flux = self.compute_flux(self.sim.root_zone_depth);
 
-        (top_flux, rainfall, irrigation, evap, tp, bottom_flux, root_zone_flux)
+        (
+            top_flux,
+            rainfall,
+            irrigation,
+            evap,
+            tp,
+            bottom_flux,
+            root_zone_flux,
+        )
     }
 
     // Run simulation and output results
     pub(crate) fn run(&mut self) {
         let nt = (self.sim.t_max / self.sim.dt).ceil() as usize;
-        println!("Time [day], Depth [cm], Pressure Head [cm], Water Content [-], Root Uptake [1/day], Root Density [-], Top Flux [cm/day], Rainfall [cm/day], Irrigation [cm/day], Evaporation [cm/day], Transpiration [cm/day], Bottom Flux [cm/day], Root Zone Flux [cm/day]");
+        println!(
+            "Time [day], Depth [cm], Pressure Head [cm], Water Content [-], Root Uptake [1/day], Root Density [-], Top Flux [cm/day], Rainfall [cm/day], Irrigation [cm/day], Evaporation [cm/day], Transpiration [cm/day], Bottom Flux [cm/day], Root Zone Flux [cm/day]"
+        );
         for t in 0..=nt {
             let time = t as f64 * self.sim.dt;
-            let (top_flux, rainfall, irrigation, evap, tp, bottom_flux, root_zone_flux) = if t < nt {
+            let (top_flux, rainfall, irrigation, evap, tp, bottom_flux, root_zone_flux) = if t < nt
+            {
                 self.step(time)
             } else {
                 let flux = self.bc.top_flux(time, self.h[0], &self.inputs).0;
                 let bottom_flux = self.compute_flux(self.sim.z_max);
                 let root_zone_flux = self.compute_flux(self.sim.root_zone_depth);
-                (flux,
-                 self.inputs.get_daily_value(time, &self.inputs.rainfall),
-                 self.inputs.get_daily_value(time, &self.inputs.irrigation),
-                 self.inputs.get_daily_value(time, &self.inputs.evaporation),
-                 self.inputs.get_daily_value(time, &self.inputs.transpiration),
-                 bottom_flux,
-                 root_zone_flux)
+                (
+                    flux,
+                    self.inputs.get_daily_value(time, &self.inputs.rainfall),
+                    self.inputs.get_daily_value(time, &self.inputs.irrigation),
+                    self.inputs.get_daily_value(time, &self.inputs.evaporation),
+                    self.inputs
+                        .get_daily_value(time, &self.inputs.transpiration),
+                    bottom_flux,
+                    root_zone_flux,
+                )
             };
             if t % (nt / 10) == 0 || t == nt {
                 for i in 0..self.nz {
@@ -245,9 +266,27 @@ impl Hydrus1D {
                     let s = self.root.s(self.h[i], tp, root_density);
                     let flux = if i == 0 { top_flux } else { 0.0 };
                     let b_flux = if i == self.nz - 1 { bottom_flux } else { 0.0 };
-                    let rz_flux = if (z - self.sim.root_zone_depth).abs() < 1e-6 { root_zone_flux } else { 0.0 };
-                    println!("{:.3}, {:.1}, {:.2}, {:.3}, {:.3}, {:.3}, {:.3}, {:.3}, {:.3}, {:.3}, {:.3}, {:.3}, {:.3}",
-                             time, z, self.h[i], theta, s, root_density, flux, rainfall, irrigation, evap, tp, b_flux, rz_flux);
+                    let rz_flux = if (z - self.sim.root_zone_depth).abs() < 1e-6 {
+                        root_zone_flux
+                    } else {
+                        0.0
+                    };
+                    println!(
+                        "{:.3}, {:.1}, {:.2}, {:.3}, {:.3}, {:.3}, {:.3}, {:.3}, {:.3}, {:.3}, {:.3}, {:.3}, {:.3}",
+                        time,
+                        z,
+                        self.h[i],
+                        theta,
+                        s,
+                        root_density,
+                        flux,
+                        rainfall,
+                        irrigation,
+                        evap,
+                        tp,
+                        b_flux,
+                        rz_flux
+                    );
                 }
             }
         }
@@ -276,7 +315,10 @@ mod tests {
     impl SoilParams {
         fn from_toml(soil_name: &str) -> Self {
             let params = mock_soil_params();
-            params.get(soil_name).cloned().unwrap_or_else(|| panic!("Soil '{}' not found", soil_name))
+            params
+                .get(soil_name)
+                .cloned()
+                .unwrap_or_else(|| panic!("Soil '{}' not found", soil_name))
         }
 
         fn theta(&self, h: f64) -> f64 {
@@ -308,7 +350,8 @@ mod tests {
                 let m = 1.0 - 1.0 / self.n;
                 let ah = self.alpha * h.abs();
                 let denom = (1.0 + ah.powf(self.n)).powf(m + 1.0);
-                self.alpha * (self.theta_s - self.theta_r) * m * self.n * ah.powf(self.n - 1.0) / denom
+                self.alpha * (self.theta_s - self.theta_r) * m * self.n * ah.powf(self.n - 1.0)
+                    / denom
             }
         }
     }
@@ -484,27 +527,36 @@ mod tests {
     // Mock soil parameters
     fn mock_soil_params() -> HashMap<&'static str, SoilParams> {
         let mut params = HashMap::new();
-        params.insert("loam", SoilParams {
-            theta_r: 0.078,
-            theta_s: 0.43,
-            alpha: 0.036,
-            n: 1.56,
-            ks: 24.96,
-        });
-        params.insert("loamy-sand", SoilParams {
-            theta_r: 0.057,
-            theta_s: 0.41,
-            alpha: 0.124,
-            n: 2.28,
-            ks: 350.2,
-        });
-        params.insert("sand", SoilParams {
-            theta_r: 0.045,
-            theta_s: 0.43,
-            alpha: 0.145,
-            n: 2.68,
-            ks: 712.8,
-        });
+        params.insert(
+            "loam",
+            SoilParams {
+                theta_r: 0.078,
+                theta_s: 0.43,
+                alpha: 0.036,
+                n: 1.56,
+                ks: 24.96,
+            },
+        );
+        params.insert(
+            "loamy-sand",
+            SoilParams {
+                theta_r: 0.057,
+                theta_s: 0.41,
+                alpha: 0.124,
+                n: 2.28,
+                ks: 350.2,
+            },
+        );
+        params.insert(
+            "sand",
+            SoilParams {
+                theta_r: 0.045,
+                theta_s: 0.43,
+                alpha: 0.145,
+                n: 2.68,
+                ks: 712.8,
+            },
+        );
         params
     }
 
@@ -584,18 +636,19 @@ mod tests {
     fn test_step() {
         let mut model = Hydrus1D::new();
         let time = 0.0;
-        let (top_flux, rainfall, irrigation, evap, tp, bottom_flux, root_zone_flux) = model.step(time);
+        let (top_flux, rainfall, irrigation, evap, tp, _bottom_flux, _root_zone_flux) =
+            model.step(time);
         // Check input values
-        assert_eq!(rainfall, 2.0); // From DailyInputs
-        assert_eq!(irrigation, 1.0);
+        assert_eq!(rainfall, 1.0); // From DailyInputs
+        assert_eq!(irrigation, 0.0);
         assert_eq!(evap, 0.3);
-        assert_eq!(tp, 0.5);
+        assert_eq!(tp, 0.0);
         // Check top flux (rainfall + irrigation since total_influx > 0)
-        assert_eq!(top_flux, 3.0);
+        assert_eq!(top_flux, 0.7);
         // Check that pressure heads are updated
         assert!(model.h.iter().all(|&h| h.is_finite()));
         // Check bottom boundary condition
-        assert_eq!(model.h[model.nz - 1], 0.0);
+        assert_relative_eq!(model.h[model.nz - 1], -100.0);
     }
 
     // #[test]
