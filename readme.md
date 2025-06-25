@@ -15,3 +15,11 @@ to return what the crop water use was, the soil deep percolation and the run-off
 - [ ] Calculate Daily Balance
 - [ ] Return daily deep percolation and run-off
 - [ ] Return crop water use and evaporation
+
+## QC Process
+
+The QC process was to compare this against a run of Hydrus-1D application version 4.17 installed on a Windows machine.
+The process was to set up the same input parameters in both applications and compare the results of the bottom flux of
+each
+run. The result was that the solutions matched very closely (within 0.01), which is acceptable given the different
+machine architectures and programming techniques used.
