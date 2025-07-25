@@ -11,8 +11,19 @@ pub struct SoilParams {
 }
 
 impl SoilParams {
+    pub fn new(theta_r: f64, theta_s: f64, alpha: f64, n: f64, ks: f64) -> Self {
+        SoilParams {
+            theta_r,
+            theta_s,
+            alpha,
+            n,
+            ks,
+        }
+    }
+
     pub(crate) fn from_toml(soil_name: &str) -> Self {
-        let toml_str = fs::read_to_string("soil_parameters.toml").expect("Failed to read soil_parameters.toml");
+        let toml_str = fs::read_to_string("soil_parameters.toml")
+            .expect("Failed to read soil_parameters.toml");
         let params: toml::Value = toml::from_str(&toml_str).expect("Failed to parse TOML");
 
         let mut soil_name = soil_name.to_lowercase();
@@ -20,9 +31,7 @@ impl SoilParams {
             soil_name = "loam".to_string();
         }
 
-        let mut soil_params = params
-            .get(soil_name)
-            .and_then(|v| v.as_table());
+        let mut soil_params = params.get(soil_name).and_then(|v| v.as_table());
 
         if soil_params.is_none() {
             soil_params = params.get("loam").and_then(|v| v.as_table());
@@ -30,11 +39,26 @@ impl SoilParams {
 
         let soil_params = soil_params.expect("Invalid soils");
 
-        let theta_r = soil_params.get("theta_r").and_then(|v| v.as_float()).expect("Missing theta_r");
-        let theta_s = soil_params.get("theta_s").and_then(|v| v.as_float()).expect("Missing theta_s");
-        let alpha = soil_params.get("alpha").and_then(|v| v.as_float()).expect("Missing alpha");
-        let n = soil_params.get("n").and_then(|v| v.as_float()).expect("Missing n");
-        let ks = soil_params.get("ks").and_then(|v| v.as_float()).expect("Missing ks");
+        let theta_r = soil_params
+            .get("theta_r")
+            .and_then(|v| v.as_float())
+            .expect("Missing theta_r");
+        let theta_s = soil_params
+            .get("theta_s")
+            .and_then(|v| v.as_float())
+            .expect("Missing theta_s");
+        let alpha = soil_params
+            .get("alpha")
+            .and_then(|v| v.as_float())
+            .expect("Missing alpha");
+        let n = soil_params
+            .get("n")
+            .and_then(|v| v.as_float())
+            .expect("Missing n");
+        let ks = soil_params
+            .get("ks")
+            .and_then(|v| v.as_float())
+            .expect("Missing ks");
 
         SoilParams {
             theta_r,
@@ -85,28 +109,62 @@ impl SoilParams {
 // Soil layer definition
 #[derive(Clone)]
 pub struct SoilLayer {
-    pub(crate) z_min: f64,      // Start depth of layer [cm]
-    pub(crate) z_max: f64,      // End depth of layer [cm]
-    params: SoilParams, // Soil parameters
+    pub(crate) z_min: f64,    // Start depth of layer [cm]
+    pub(crate) z_max: f64,    // End depth of layer [cm]
+    pub params: SoilParams,   // Soil parameters
+    pub horizon_name: String, // Horizon name like "H1", "A", or "B"
+}
+
+impl SoilLayer {
+    // This function creates a new soil layer from a vector of soil parameters
+    pub fn new(z_min: f64, z_max: f64, params: SoilParams, horizon_name: String) -> Self {
+        SoilLayer {
+            z_min,
+            z_max,
+            params,
+            horizon_name,
+        }
+    }
 }
 
 // Soil profile managing multiple layers
 #[derive(Clone)]
-pub(crate) struct SoilProfile {
-    pub(crate) layers: Vec<SoilLayer>,
+pub struct SoilProfile {
+    pub layers: Vec<SoilLayer>,
+    pub hydro_group: String, // Hydrological group like "A", "B", "C"
+    pub soil_name: String,   // name of soils like "Dailey loamy sand, 3 to 9 percent slopes"
 }
 
 impl SoilProfile {
-    pub(crate) fn new(soil_layers: Vec<(f64, f64, &str)>) -> Self {
+    // This function creates a new soil profile from a vector of soil layers
+    pub fn new() -> Self {
+        SoilProfile {
+            layers: Vec::new(),
+            hydro_group: String::new(),
+            soil_name: String::new(),
+        }
+    }
+
+    // this function creates a new soil profile from a vector of soil layers that are derived from the default TOML file of soil_parameters
+    pub fn new_from_toml(
+        soil_layers: Vec<(f64, f64, &str, &str)>,
+        hydro_group: String,
+        soil_name: String,
+    ) -> Self {
         let layers = soil_layers
             .into_iter()
-            .map(|(z_min, z_max, soil_name)| SoilLayer {
+            .map(|(z_min, z_max, soil_name, horizon_name)| SoilLayer {
                 z_min,
                 z_max,
                 params: SoilParams::from_toml(soil_name),
+                horizon_name: horizon_name.to_string(),
             })
             .collect();
-        SoilProfile { layers }
+        SoilProfile {
+            layers,
+            hydro_group,
+            soil_name,
+        }
     }
 
     // Get soil parameters at a given depth
